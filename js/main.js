@@ -29,11 +29,14 @@ const impuesto5Element = document.getElementById("impuesto5");
 const subtotal5Element = document.getElementById("subtotal5");
 const totalElement = document.getElementById("total");
 const confirmarElement = document.getElementById("confirmar");
+const cancelarElement = document.getElementById("cancelar");
 const cabecerasListadoElement = document.getElementById("cabecerasListado");
 const documentoRowElement = document.getElementById("documentoRow");
 
 let listaDocumentos = [];
 let ultimoDocumentoId = 0;
+let idEnUso = 0;
+let modo = 'insert';
 
 const calcularTotal = (listaDocumentoDetalle) => {
     let impuesto;
@@ -180,11 +183,6 @@ const ordernarDocumentos = () => {
     }
 }
 
-const eliminarDocumento = (id) => {
-    listaDocumentos = listaDocumentos.filter(d => d.id != id);
-    mostrarListadoDocumentos();
-}
-
 const mostrarListadoDocumentos = () => {    
     if(listaDocumentos.length == 0){
         cabecerasListadoElement.innerHTML = `
@@ -235,6 +233,12 @@ const mostrarListadoDocumentos = () => {
             <div class="row">
                 <div class="col-xl-1 offset-md-1">
                     <div class="alignRigth">
+                        <a class="buttonGrid" onclick="gestionarVisualizarDocumento(${doc.id})">
+                            <img src="img/search.png" alt="Visuaizar Documento">
+                        </a>
+                        <a class="buttonGrid" onclick="gestionarModificarDocumento(${doc.id})">
+                            <img src="img/edit.png" alt="Modificar Documento">
+                        </a>
                         <a class="buttonGrid" onclick="eliminarDocumento(${doc.id})">
                             <img src="img/delete.png" alt="Eliminar Documento">
                         </a>
@@ -283,6 +287,39 @@ const reinciarForm = () => {
         document.getElementById(`impuesto${i}`).innerHTML = 0;
         document.getElementById(`subtotal${i}`).innerHTML = 0;     
     } 
+    idEnUso = 0;
+    modo = 'ins';
+}
+
+const mostrarDocumento = (id) => {
+    let documentosFiltrados = [];
+    let documento;
+    let index;
+
+    documentosFiltrados = listaDocumentos.filter( (d) => d.id == id);
+    documento = documentosFiltrados[0];
+
+    clientElement.value = documento.cliente;
+    tipoDocumentoElement.value = documento.tipoDocumento;
+    centroEmisorElement.value = documento.centroEmisor;
+    numeroElement.innerHTML = documento.numero;
+    totalElement.innerHTML = documento.total;
+    for (let i = 1; i < 6; i++) {
+        if(i <= documento.listaDocumentoDetalle.length){
+            index = i - 1;
+            document.getElementById(`cantidad${i}`).value = documento.listaDocumentoDetalle[index].cantidad;
+            document.getElementById(`producto${i}`).value = documento.listaDocumentoDetalle[index].producto.id;
+            document.getElementById(`precio${i}`).innerHTML = documento.listaDocumentoDetalle[index].producto.precio;
+            document.getElementById(`impuesto${i}`).innerHTML = documento.listaDocumentoDetalle[index].producto.impuesto;
+            document.getElementById(`subtotal${i}`).innerHTML = documento.listaDocumentoDetalle[index].producto.subtotal;
+        } else {
+            document.getElementById(`cantidad${i}`).value = 0;
+            document.getElementById(`producto${i}`).value = '';
+            document.getElementById(`precio${i}`).innerHTML = 0;
+            document.getElementById(`impuesto${i}`).innerHTML = 0;
+            document.getElementById(`subtotal${i}`).innerHTML = 0;
+        }     
+    } 
 }
 
 const crearDocumento = () => {
@@ -298,11 +335,42 @@ const crearDocumento = () => {
     reinciarForm(); 
 }
 
-const gestionarCreacionDocumento = () => {
+const modificarDocumento = (id) => {
+
+}
+
+const visualizarDocumento = (id) => {
+    
+}
+
+const gestionarVisualizarDocumento = (id) => {
+    idEnUso = id;
+    modo = 'dis';
+    mostrarDocumento(id);
+    // HACER TODO READONLY
+}
+
+const gestionarModificarDocumento = (id) => {
+    idEnUso = id;
+    modo = 'upd';
+    mostrarDocumento(id);
+    // AGREGAR LÓGICA PRA MODIFCAR DOCUMETNO
+}
+
+const eliminarDocumento = (id) => {
+    listaDocumentos = listaDocumentos.filter(d => d.id != id);
+    mostrarListadoDocumentos();
+}
+
+
+const gestionarConfirmar = () => {
     let msgError = '';
 
     msgError = validarInputs();
-    msgError == ''? crearDocumento() : mostrarError(msgError);
+    if (msgError != '') mostrarError(msgError);
+    if (msgError == '' && modo == 'ins') crearDocumento();
+    if (msgError == '' && modo == 'upd') modificarDocumento();
+    if (msgError == '' && modo == 'dis') visualizarDocumento();
 }
 
 const gestionarNumero = () => {
@@ -357,7 +425,8 @@ const gestionarLineaDetalle = (nroLinea) => {
     totalElement.innerHTML = total;
 }
 
-confirmarElement.addEventListener("click", gestionarCreacionDocumento);
+confirmarElement.addEventListener("click", gestionarConfirmar);
+cancelarElement.addEventListener("click", reinciarForm())
 tipoDocumentoElement.addEventListener("change", gestionarNumero);
 centroEmisorElement.addEventListener("change", gestionarNumero);
 cantidad1Element.addEventListener("focusout", () => gestionarLineaDetalle(1));
