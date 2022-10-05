@@ -33,11 +33,10 @@ const cancelarElement = document.getElementById("cancelar");
 const cabecerasListadoElement = document.getElementById("cabecerasListado");
 const documentoRowElement = document.getElementById("documentoRow");
 
-let listaDocumentos = [];
-let ultimoDocumentoId = 0;
 let idEnUso = 0;
-let modo = 'insert';
+let modo = 'ins';
 
+// Calcula el total del documento.
 const calcularTotal = (listaDocumentoDetalle) => {
     let impuesto;
     let total = 0;
@@ -79,6 +78,128 @@ class DocumentoDetalle{
 
 let productos = [new Producto(1, 'Microfono', 25000, 21), new Producto(2, 'Monitor', 80000, 0), new Producto(3, 'Mouse', 20000, 21), new Producto(4, 'Parlantes', 50000, 27), new Producto(5, 'Teclado', 30000, 0)];
 
+// Ordena los documentos por Tipo de Documento, Centro Emisor y Número.
+const ordernarDocumentos = () => {
+    let listaDocumentosJson = localStorage.getItem('listaDocumentos');
+    let listaDocumentos = JSON.parse(listaDocumentosJson);
+
+    if(listaDocumentos != null){
+        for(let i = 0; i < listaDocumentos.length; i++){
+            for(let j = 0; j < listaDocumentos.length - 1; j++){
+                if ((listaDocumentos[j].tipo > listaDocumentos[j + 1].tipo) ||
+                    (listaDocumentos[j].tipo == listaDocumentos[j + 1].tipo && listaDocumentos[j].centroEmisor > listaDocumentos[j + 1].centroEmisor) ||
+                    (listaDocumentos[j].tipo == listaDocumentos[j + 1].tipo && listaDocumentos[j].centroEmisor == listaDocumentos[j + 1].centroEmisor && listaDocumentos[j].numero > listaDocumentos[j + 1].numero)) {
+                    let documentoAux = listaDocumentos[j];
+                    listaDocumentos[j] = listaDocumentos[j + 1];
+                    listaDocumentos[j + 1] = documentoAux;
+                }
+            }
+        }
+    }
+    listaDocumentosJson = JSON.stringify(listaDocumentos);
+    localStorage.setItem('listaDocumentos', listaDocumentosJson);
+}
+
+// Muestra el listado de Documentos.
+const mostrarListadoDocumentos = () => {    
+    let listaDocumentosJson = localStorage.getItem('listaDocumentos');
+    let listaDocumentos = JSON.parse(listaDocumentosJson);
+    documentoRowElement.innerHTML = '';
+
+    if(listaDocumentos == null || listaDocumentos.length == 0){
+        cabecerasListadoElement.innerHTML = `
+        <div class="col-xl-2 offset-md-5">
+            <div class="containerInput alignCenter">
+                <span class="textGeneric displayInlineBlock" for="numero">Aún no hay Documentos generados</span>
+            </div>
+        </div>
+        `;
+    }
+    if(listaDocumentos != null && listaDocumentos.length > 0){
+        cabecerasListadoElement.innerHTML = `
+            <div class="col-xl-2 offset-md-1">
+                <div class="containerInput alignCenter">
+                    <span class="textGeneric displayInlineBlock" for="TipoDocumento">Tipo de Documento</span>
+                </div>
+            </div>
+            <div class="col-xl-1">
+                <div class="containerInput alignCenter">
+                    <span class="textGeneric displayInlineBlock" for="CentroEmisor">Centro Emisor</span>
+                </div>
+            </div>
+            <div class="col-xl-1">
+                <div class="containerInput alignCenter">
+                    <span class="textGeneric displayInlineBlock" for="Numero">Número</span>
+                </div>
+            </div>
+            <div class="col-xl-2">
+                <div class="containerInput alignCenter">
+                    <span class="textGeneric displayInlineBlock" for="Cliente">Cliente</span>
+                </div>
+            </div>
+            <div class="col-xl-2">
+                <div class="containerInput alignCenter">
+                    <span class="textGeneric displayInlineBlock" for="Total">Total</span>
+                </div>
+            </div>
+            <div class="col-xl-2">
+            </div>
+        `;
+
+        ordernarDocumentos();
+        documentoRowElement.innerHTML = '';
+    
+        listaDocumentos.forEach( (doc) => { 
+            documentoRowElement.innerHTML += `
+                <div class="row">
+                    <div class="col-xl-2 offset-md-1 gridRowColor">
+                        <div class="containerInput alignCenter">
+                            <p class="textGeneric">${doc.tipo}</p>
+                        </div>
+                    </div>
+                    <div class="col-xl-1 gridRowColor">
+                        <div class="containerInput alignCenter">
+                            <p class="textGeneric">${doc.centroEmisor}</p>
+                        </div>
+                    </div>
+                    <div class="col-xl-1 gridRowColor">
+                        <div class="containerInput alignCenter">
+                            <p class="textGeneric">${doc.numero}</p>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 gridRowColor">
+                        <div class="containerInput alignCenter">
+                            <p class="textGeneric">${doc.cliente}</p>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 gridRowColor">
+                        <div class="containerInput alignCenter">
+                            <p class="textGeneric">${doc.total}</p>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 gridRowColor">
+                        <div class="alignCenter">
+                            <a class="buttonGrid" onclick="gestionarVisualizarDocumento(${doc.id})">
+                                <img src="img/search.png" alt="Visuaizar Documento" title="Visualizar">
+                            </a>
+                            <a class="buttonGrid" onclick="gestionarModificarDocumento(${doc.id})">
+                                <img src="img/edit.png" alt="Modificar Documento" title="Modificar">
+                            </a>
+                            <a class="buttonGrid" onclick="eliminarDocumento(${doc.id})">
+                                <img src="img/delete.png" alt="Eliminar Documento" title="Eliminar">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+}
+
+// Muestro los Documentos que están en el Local Storage.
+mostrarListadoDocumentos();
+
+// Valida que se haya seleccionado Cliente.
 const validarCliente = (msgError) => {
     let cliente = clientElement.value;
 
@@ -86,6 +207,7 @@ const validarCliente = (msgError) => {
     return msgError;
 }
 
+// Valida que se haya seleccionado Tipo de Documento.
 const validarTipoDocumento = (msgError) => {
     let tipoDocumento = tipoDocumentoElement.value;
 
@@ -93,6 +215,7 @@ const validarTipoDocumento = (msgError) => {
     return msgError;
 }
 
+// Valida que se haya seleccionado Centro Emisor.
 const validarCentroEmisor = (msgError) => {
     let centroEmisor = centroEmisorElement.value;
 
@@ -100,6 +223,7 @@ const validarCentroEmisor = (msgError) => {
     return msgError;
 }
 
+// Valida que se haya cargado correctamente el detalle del Documento.
 const validarDetalle = (msgError) => {
     let cantidadInput;
     let productoInput;
@@ -122,6 +246,7 @@ const validarDetalle = (msgError) => {
     return msgError
 }
 
+// Valida que se hayan cargado correctamente los atributos del Documento.
 const validarInputs = () => {
     let msgError = '';
 
@@ -132,18 +257,22 @@ const validarInputs = () => {
     return msgError;
 }
 
+// Muestra mensaje de error.
 const mostrarError = (msgError) => {
     alert(msgError);
 }
 
+// Asigna el Número del Documento. Busca el último Documento generado para el mismo Tipo de Documento y Centro Emisor y le agrega uno.
 const asignarNumero = (tipoDocumento, centroEmisor) => {
-    let documentosFiltrados;
+    let listaDocumentosJson = localStorage.getItem('listaDocumentos');
+    let listaDocumentos = JSON.parse(listaDocumentosJson);
+    let documentosFiltrados = [];
     let numero;
     let numeroStr = '00000000';
     let difLength = 0;
 
-    documentosFiltrados = listaDocumentos.filter( (d) => d.tipo == tipoDocumento && d.centroEmisor == centroEmisor);    // Consigo los documentos del mismo tipo y centro emisor.
-    if (documentosFiltrados.length == 0) return '00000001';
+    if(listaDocumentos != null) documentosFiltrados = listaDocumentos.filter( (d) => d.tipo == tipoDocumento && d.centroEmisor == centroEmisor);    // Consigo los documentos del mismo tipo y centro emisor.
+    if (listaDocumentos == null || documentosFiltrados.length == 0) return '00000001';
     documentosFiltrados.sort( (a,b) => b.numero - a.numero); // Ordeno los documentos filtrados de mayor a menor para obtener el más grande fácilmente.
     numero = parseInt(documentosFiltrados[0].numero) + 1;
     numeroStr += numero;
@@ -152,6 +281,7 @@ const asignarNumero = (tipoDocumento, centroEmisor) => {
     return numeroStr;
 }
 
+// Crea el detalle del Documento.
 const crearDetalle = () => {
     let cantidadInput;
     let productoInput;
@@ -162,6 +292,7 @@ const crearDetalle = () => {
         cantidadInput = document.getElementById(`cantidad${i}`).value;
         productoInput = document.getElementById(`producto${i}`).value;
         if (cantidadInput > 0 && productoInput != ""){
+            productoInput -= 1;
             documentoDetalle = new DocumentoDetalle(productos[productoInput], cantidadInput);
             listaDocumentoDetalle.push(documentoDetalle);
         }
@@ -169,210 +300,160 @@ const crearDetalle = () => {
     return listaDocumentoDetalle;
 }
 
-const ordernarDocumentos = () => {
-    for(let i = 0; i < listaDocumentos.length; i++){    // Ordeno por Tipo de Documento, Centro Emisor y Número.
-        for(let j = 0; j < listaDocumentos.length - 1; j++){
-            if ((listaDocumentos[j].tipo > listaDocumentos[j + 1].tipo) ||
-                (listaDocumentos[j].tipo == listaDocumentos[j + 1].tipo && listaDocumentos[j].centroEmisor > listaDocumentos[j + 1].centroEmisor) ||
-                (listaDocumentos[j].tipo == listaDocumentos[j + 1].tipo && listaDocumentos[j].centroEmisor == listaDocumentos[j + 1].centroEmisor && listaDocumentos[j].numero > listaDocumentos[j + 1].numero)) {
-                let documentoAux = listaDocumentos[j];
-                listaDocumentos[j] = listaDocumentos[j + 1];
-                listaDocumentos[j + 1] = documentoAux;
-            }
-        }
-    }
-}
-
-const mostrarListadoDocumentos = () => {    
-    if(listaDocumentos.length == 0){
-        cabecerasListadoElement.innerHTML = `
-        <div class="col-xl-2 offset-md-5">
-            <div class="containerInput alignCenter">
-                <span class="textGeneric" for="numero">Aún no hay Documentos generados</span>
-            </div>
-        </div>
-        `;
-    }
-    if(listaDocumentos.length == 1){
-        cabecerasListadoElement.innerHTML = `
-            <div class="col-xl-1 offset-md-1">
-            </div>
-            <div class="col-xl-2">
-                <div class="containerInput alignCenter">
-                    <span class="textGeneric" for="numero">Tipo Documento</span>
-                </div>
-            </div>
-            <div class="col-xl-1">
-                <div class="containerInput alignCenter">
-                    <span class="textGeneric" for="producto">Centro Emisor</span>
-                </div>
-            </div>
-            <div class="col-xl-2">
-                <div class="containerInput alignCenter">
-                    <span class="textGeneric" for="precio">Numero</span>
-                </div>
-            </div>
-            <div class="col-xl-2">
-                <div class="containerInput alignCenter">
-                    <span class="textGeneric" for="impuesto">Cliente</span>
-                </div>
-            </div>
-            <div class="col-xl-2">
-                <div class="containerInput alignCenter">
-                    <span class="textGeneric" for="subtotal">Total</span>
-                </div>
-            </div>
-        `;
-    }
-
-    ordernarDocumentos();
-    documentoRowElement.innerHTML = '';
-
-    listaDocumentos.forEach( (doc) => { 
-        documentoRowElement.innerHTML += `
-            <div class="row">
-                <div class="col-xl-1 offset-md-1">
-                    <div class="alignRigth">
-                        <a class="buttonGrid" onclick="gestionarVisualizarDocumento(${doc.id})">
-                            <img src="img/search.png" alt="Visuaizar Documento">
-                        </a>
-                        <a class="buttonGrid" onclick="gestionarModificarDocumento(${doc.id})">
-                            <img src="img/edit.png" alt="Modificar Documento">
-                        </a>
-                        <a class="buttonGrid" onclick="eliminarDocumento(${doc.id})">
-                            <img src="img/delete.png" alt="Eliminar Documento">
-                        </a>
-                    </div>
-                </div>
-                <div class="col-xl-2">
-                    <div class="containerInput alignCenter">
-                        <p class="textGeneric">${doc.tipo}</p>
-                    </div>
-                </div>
-                <div class="col-xl-1">
-                    <div class="containerInput alignCenter">
-                        <p class="textGeneric">${doc.centroEmisor}</p>
-                    </div>
-                </div>
-                <div class="col-xl-2">
-                    <div class="containerInput alignCenter">
-                        <p class="textGeneric">${doc.numero}</p>
-                    </div>
-                </div>
-                <div class="col-xl-2">
-                    <div class="containerInput alignCenter">
-                        <p class="textGeneric">${doc.cliente}</p>
-                    </div>
-                </div>
-                <div class="col-xl-2">
-                    <div class="containerInput alignCenter">
-                        <p class="textGeneric">${doc.total}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-}
-
+// Reinicia el form dejando todos los inputs en vacíos.
 const reinciarForm = () => {
     clientElement.value = '';
+    clientElement.disabled = false;
     tipoDocumentoElement.value = '';
+    tipoDocumentoElement.disabled = false;
     centroEmisorElement.value = '';
+    centroEmisorElement.disabled = false;
     numeroElement.innerHTML = '00000000';
     totalElement.innerHTML = 0;
     for (let i = 1; i < 6; i++) {
         document.getElementById(`cantidad${i}`).value = 0;
+        document.getElementById(`cantidad${i}`).disabled = false;
         document.getElementById(`producto${i}`).value = '';
+        document.getElementById(`producto${i}`).disabled = false;
         document.getElementById(`precio${i}`).innerHTML = 0;
         document.getElementById(`impuesto${i}`).innerHTML = 0;
-        document.getElementById(`subtotal${i}`).innerHTML = 0;     
+        document.getElementById(`impuesto${i}`).disabled = false;
+        document.getElementById(`subtotal${i}`).innerHTML = 0;
     } 
     idEnUso = 0;
     modo = 'ins';
 }
 
+// Muestra el Documento para visualizar/modificar.
 const mostrarDocumento = (id) => {
+    let listaDocumentosJson = localStorage.getItem('listaDocumentos');
+    let listaDocumentos = JSON.parse(listaDocumentosJson);
     let documentosFiltrados = [];
     let documento;
     let index;
 
-    documentosFiltrados = listaDocumentos.filter( (d) => d.id == id);
-    documento = documentosFiltrados[0];
+    if(listaDocumentos != null){
+        documentosFiltrados = listaDocumentos.filter( (d) => d.id == id);
+        documento = documentosFiltrados[0];
 
-    clientElement.value = documento.cliente;
-    tipoDocumentoElement.value = documento.tipoDocumento;
-    centroEmisorElement.value = documento.centroEmisor;
-    numeroElement.innerHTML = documento.numero;
-    totalElement.innerHTML = documento.total;
-    for (let i = 1; i < 6; i++) {
-        if(i <= documento.listaDocumentoDetalle.length){
-            index = i - 1;
-            document.getElementById(`cantidad${i}`).value = documento.listaDocumentoDetalle[index].cantidad;
-            document.getElementById(`producto${i}`).value = documento.listaDocumentoDetalle[index].producto.id;
-            document.getElementById(`precio${i}`).innerHTML = documento.listaDocumentoDetalle[index].producto.precio;
-            document.getElementById(`impuesto${i}`).innerHTML = documento.listaDocumentoDetalle[index].producto.impuesto;
-            document.getElementById(`subtotal${i}`).innerHTML = documento.listaDocumentoDetalle[index].producto.subtotal;
-        } else {
-            document.getElementById(`cantidad${i}`).value = 0;
-            document.getElementById(`producto${i}`).value = '';
-            document.getElementById(`precio${i}`).innerHTML = 0;
-            document.getElementById(`impuesto${i}`).innerHTML = 0;
-            document.getElementById(`subtotal${i}`).innerHTML = 0;
-        }     
-    } 
+        clientElement.value = documento.cliente;
+        tipoDocumentoElement.value = documento.tipo;
+        centroEmisorElement.value = documento.centroEmisor;
+        numeroElement.innerHTML = documento.numero;
+        totalElement.innerHTML = documento.total;
+        for (let i = 1; i < 6; i++) {
+            if(i <= documento.listaDocumentoDetalle.length){
+                index = i - 1;
+                document.getElementById(`cantidad${i}`).value = documento.listaDocumentoDetalle[index].cantidad;
+                document.getElementById(`producto${i}`).value = documento.listaDocumentoDetalle[index].producto.id;
+                document.getElementById(`precio${i}`).innerHTML = documento.listaDocumentoDetalle[index].producto.precio;
+                document.getElementById(`impuesto${i}`).innerHTML = documento.listaDocumentoDetalle[index].producto.impuesto;
+                document.getElementById(`subtotal${i}`).innerHTML = documento.listaDocumentoDetalle[index].cantidad * documento.listaDocumentoDetalle[index].producto.precio * (1 + documento.listaDocumentoDetalle[index].producto.impuesto / 100);
+            } else {
+                document.getElementById(`cantidad${i}`).value = 0;
+                document.getElementById(`producto${i}`).value = '';
+                document.getElementById(`precio${i}`).innerHTML = 0;
+                document.getElementById(`impuesto${i}`).innerHTML = 0;
+                document.getElementById(`subtotal${i}`).innerHTML = 0;
+            }     
+        } 
+    }
 }
 
+// Crea un nuevo documento con los datos cargados en pantalla.
 const crearDocumento = () => {
+    let listaDocumentosJson = localStorage.getItem('listaDocumentos');
+    let listaDocumentos = JSON.parse(listaDocumentosJson);
     let cliente = clientElement.value;
     let tipoDocumento = tipoDocumentoElement.value;
     let centroEmisor = centroEmisorElement.value;
     let numero = numeroElement.innerHTML;
     let listaDocumentoDetalle = crearDetalle();
-    ultimoDocumentoId++;
+    let ultimoDocumentoId = localStorage.getItem('ultimoDocumentoId');
+
+    ultimoDocumentoId == null ? ultimoDocumentoId = 1 : ultimoDocumentoId++;
     let documento = new Documento(ultimoDocumentoId, cliente, tipoDocumento, centroEmisor, numero, listaDocumentoDetalle);
+    if(listaDocumentos == null) listaDocumentos = [];
     listaDocumentos.push(documento); 
+    listaDocumentosJson = JSON.stringify(listaDocumentos);
+    localStorage.setItem('listaDocumentos', listaDocumentosJson);
+    localStorage.setItem('ultimoDocumentoId', ultimoDocumentoId);
     mostrarListadoDocumentos();
     reinciarForm(); 
 }
 
+// Modifica el documento con los datos cargados en pantalla.
 const modificarDocumento = (id) => {
+    let listaDocumentosJson = localStorage.getItem('listaDocumentos');
+    let listaDocumentos = JSON.parse(listaDocumentosJson);
+    let listaDocumentoDetalle = crearDetalle();
 
+    if(listaDocumentos != null){
+        listaDocumentos.forEach( (d) => {
+            if(d.id == id){
+                d.listaDocumentoDetalle = listaDocumentoDetalle;
+                d.total = calcularTotal(listaDocumentoDetalle);
+            }
+        });
+        listaDocumentosJson = JSON.stringify(listaDocumentos);
+        localStorage.setItem('listaDocumentos', listaDocumentosJson);
+        mostrarListadoDocumentos();
+        reinciarForm(); 
+    }
 }
 
-const visualizarDocumento = (id) => {
-    
-}
-
+// Setea la pantalla para visualizar el Documento. Todos los campos estarán como readonly.
 const gestionarVisualizarDocumento = (id) => {
+    reinciarForm();
     idEnUso = id;
     modo = 'dis';
     mostrarDocumento(id);
-    // HACER TODO READONLY
+    clientElement.disabled = true;
+    tipoDocumentoElement.disabled = true;
+    centroEmisorElement.disabled = true;
+    for (let i = 1; i < 6; i++) {
+        document.getElementById(`cantidad${i}`).disabled = true;
+        document.getElementById(`producto${i}`).disabled = true;
+    } 
 }
 
+// Setea la pantalla para modificar el Documento. Todos los campos estarán como readonly salvo el detalle, será lo único que se podra modificar. La cabecera no puede modificarse.
 const gestionarModificarDocumento = (id) => {
+    reinciarForm();
     idEnUso = id;
     modo = 'upd';
     mostrarDocumento(id);
-    // AGREGAR LÓGICA PRA MODIFCAR DOCUMETNO
+    clientElement.disabled = true;
+    tipoDocumentoElement.disabled = true;
+    centroEmisorElement.disabled = true;
 }
 
+// Eliminar el Documento.
 const eliminarDocumento = (id) => {
-    listaDocumentos = listaDocumentos.filter(d => d.id != id);
-    mostrarListadoDocumentos();
+    let listaDocumentosJson = localStorage.getItem('listaDocumentos');
+    let listaDocumentos = JSON.parse(listaDocumentosJson);
+
+    if(listaDocumentos != null){
+        listaDocumentos = listaDocumentos.filter(d => d.id != id);
+        listaDocumentosJson = JSON.stringify(listaDocumentos);
+        localStorage.setItem('listaDocumentos', listaDocumentosJson);
+        reinciarForm();
+        mostrarListadoDocumentos();
+    }
 }
 
-
+// Se encarga de crear/modificar/visualizar un Documento.
 const gestionarConfirmar = () => {
     let msgError = '';
 
     msgError = validarInputs();
     if (msgError != '') mostrarError(msgError);
     if (msgError == '' && modo == 'ins') crearDocumento();
-    if (msgError == '' && modo == 'upd') modificarDocumento();
-    if (msgError == '' && modo == 'dis') visualizarDocumento();
+    if (msgError == '' && modo == 'upd') modificarDocumento(idEnUso);
+    if (msgError == '' && modo == 'dis') reinciarForm();
 }
 
+// Se encarga de asignar el número cuando se cambia de Centro Emisor o Tipo de Documento
 const gestionarNumero = () => {
     let tipoDocumentoInput;
     let centroEmisorInput;
@@ -389,6 +470,7 @@ const gestionarNumero = () => {
     }
 }
 
+// Obtiene un Producto.
 const obtenerProducto = (id) => {
     let productosFiltrados;
 
@@ -396,6 +478,7 @@ const obtenerProducto = (id) => {
     return productosFiltrados[0];
 }
 
+// Se encarga de traer todos los datos del Producto seleccionado y calcula su total teniendo en cuenta la cantidad ingresada.
 const gestionarLineaDetalle = (nroLinea) => {
     let cantidadInput;
     let productoInput;
@@ -426,7 +509,7 @@ const gestionarLineaDetalle = (nroLinea) => {
 }
 
 confirmarElement.addEventListener("click", gestionarConfirmar);
-cancelarElement.addEventListener("click", reinciarForm())
+cancelarElement.addEventListener("click", reinciarForm)
 tipoDocumentoElement.addEventListener("change", gestionarNumero);
 centroEmisorElement.addEventListener("change", gestionarNumero);
 cantidad1Element.addEventListener("focusout", () => gestionarLineaDetalle(1));

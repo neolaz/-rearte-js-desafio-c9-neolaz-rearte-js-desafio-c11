@@ -102,10 +102,18 @@ body {
 }
 .inputNumber{
   text-align: right;
+  height: 30px;
+  padding: 3px 10px;
+  margin-top: 5px;
+  border-radius: 5px;
+  background-color: #2f2f2f;
+  color: #c6c6c6;
 }
 .buttonGrid{
   transition-timing-function: ease;
   transition: 0.4s;
+  text-decoration: none;
+  padding-right: 10px;
 }
 .buttonGrid:hover{
   opacity: 0.5;
@@ -113,7 +121,12 @@ body {
   transition-timing-function: ease;
   transition: 0.4s;
 }
-
+.gridRowColor{
+  background-color: #2f2f2f
+}
+.displayInlineBlock{
+  display: inline-block;
+}
 
 /* Header ---------------------------------------------*/
 header nav.navbar-expand-lg div.container-fluid {
@@ -191,11 +204,13 @@ footer {
 .contacto form input,
 .contacto form select,
 .contacto form textarea {
-  background-color: #272727;
-  border: 1px solid #FFFFFF;
-  padding: 5px 10px;
-  border-radius: 5px;
+  height: 30px;
+  padding: 3px 10px;
   margin-top: 5px;
+  border-radius: 5px;
+  background-color: #403f3f;
+  color: #fff;
+  border: none;
 }
 .contacto form label,
 .contacto form legend {
@@ -229,16 +244,35 @@ footer {
   flex-direction: column;
   width: 100%;
 }
+.contacto form .buttonCancelar{
+  text-align: center;
+  margin-top: 10px;
+  background-color: #272727;
+  color: #30fdb0;
+  font-weight: 500;
+  border: 2px solid #30fdb0 ;
+  transition-timing-function: ease;
+  transition: 0.4s;
+  border-radius: 5px;
+  padding: 5px;
+}
+.contacto form .buttonCancelar:hover {
+  opacity: 0.5;
+  transform: scale(0.98);
+  transition-timing-function: ease;
+  transition: 0.4s;
+}
 .contacto form .buttonGreen{
   text-align: center;
   margin-top: 10px;
   background-color: #30fdb0;
   color: #272727;
-  font-weight: bold;
+  font-weight: 500;
   border: none;
   transition-timing-function: ease;
   transition: 0.4s;
   border-radius: 5px;
+  padding: 5px;
 }
 .contacto form .buttonGreen:hover {
   opacity: 0.5;
@@ -261,4 +295,7 @@ footer {
 .contacto .listContainer span{
   color: #30fdb0;
   padding: 10px 0;
+}
+.contacto #documentoRow p{
+  margin-bottom: 0px;
 }
